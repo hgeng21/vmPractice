@@ -1,5 +1,7 @@
 大概就拿来记一下笔记啥的=0=
 
+---
+20211127
 # 1. 关系型数据库
 1.  六种范式：
     * 第一范式（1NF）：
@@ -21,38 +23,18 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 3. vmware虚拟机练习
 [vmware workstation pro 16.0]
 
+### 常用指令
+| 指令   | 用途         |
+| ------ | ------------ |
+| init 3 | 到达字符界面 |
+| init 5 | 到达图形界面 |
+| init 6 | 重启         |
+| init 0 | 关机         |
+
+### 基础概念
 * **虚拟机**（Virtual Machine）是计算机系统的仿真器，通过软件模拟具有完整硬件系统功能的、运行在一个完全隔离环境中的完整计算机系统，能提供物理计算机的功能。其本质特点是运行在虚拟机上的软件被局限在虚拟机提供的资源里。
 * 虚拟机根据它们的运用和与直接机器的相关性可分为**系统虚拟机**和**程序虚拟机**
   * 系统虚拟机可以提供一个可以运行完整操作系统的完整系统平台，
@@ -95,3 +77,88 @@
 > *暂时不知道，但可以先少分配一点，不够再加（建好可以改），建议低于总内存的一半
 > 7. 选择I/O控制器类型：LSI Logic; LSI Logic SAS; 准虚拟化SCSI
 > 8. 桥接网络和NAT具体应用环境？
+
+
+###网络配置
+#####主机名管理
+| 功能                  | 指令                     |
+| --------------------- | ------------------------ |
+| 查看主机名            | hostname                 |
+| 查看主机名与系统详情  | hostnamectl status       |
+| 临时修改主机名        | hostname yzm_localhost   |
+| 永久修改-直接修改文件 | vi /etc/hostname         |
+| 永久修改-命令行       | hostnamectl set-hostname |
+| 重启生效              | init 6                   |
+#####网络管理
+| 功能 | 指令                        | 备注                                         |
+| ---- | --------------------------- | -------------------------------------------- |
+| 查看 | ifconfig 或 ifconfig ens160 | 暂时用这个，后面不需要用ifconfig，有其他指令 |
+|      |                             |                                              |
+
+---
+20211130
+### 防火墙
+* Selinux: 文件级防火墙
+* Firewalld和Iptables：网络级防火墙
+  * centOS从5-8用的都是Iptables，从7开始加入Firewalld
+*  **Selinux**和**Iptables**
+*
+| 功能              | 指令                                       | 备注                    |
+| ----------------- | ------------------------------------------ | ----------------------- |
+| selinux查看       | sestatus                                   |                         |
+| selinux关闭       | vi /etc/selinux/config，将SELINUX=disabled |                         |
+| firewalld查看     | systemctl status firewalld                 |                         |
+| firewalld关闭     | systemctl stop firewalld                   |                         |
+| firewalld开机关闭 | systemctl disable firewalld                |                         |
+| Iptables查看规则  | iptables -L -n                             |                         |
+| Iptables添加规则  | iptables -I INPUT -s 192.168.10.3 -j DROP  | 只是个例子              |
+| Iptables清空规则  | iptables -F                                |                         |
+| Iptables保存      | service iptables save                      | 详见下方“yum软件包安装” |
+|                   |                                            |                         |
+
+* yum软件包安装
+  * 挂载光驱：`mount /dev/cdrom /media/`
+  * 配置yum：
+    * ```
+      cd /etc/yum.repos.d
+      mv CentOS-Media.repo /mnt/
+      rm -rf *
+      mv /mnt/CentOS-Linux-Media.repo ./
+      vi CentOS-Media.repo
+      以下是vi内修改的部分：
+      [c8-media-BaseOS]
+      baseurl=file:///media/BaseOS
+      gpgcheck=0
+      enabled=1
+      [c8-media-AppStream]
+      baseurl=file:///media/AppStream
+      gpgcheck=0
+      enabled=1
+      ```
+    * 查看挂载： `df`
+    * 查看yum可控制的软件包：`yum list | wc -l`, `yum list | grep iptables`
+    * yum安装rpm软件包：`yum -y install iptables-services.x86_64`
+
+### vi编辑器
+| 功能       | 指令 |
+| ---------- | ---- |
+| 保存并退出 | :wq     |
+
+
+### MySQL数据库练习
+<a href="https://zhuanlan.zhihu.com/p/367327903" target="_blank">安装MySQL数据库</a>
+
+
+###装一下php，建个wordpress站点
+```
+systemctl stop firewalld.service
+yum install php*
+service php-fpm start
+yum install nginx
+service nginx start
+```
+* "Failed to update metadata..."
+  * Edit /etc/yum.repos.d/CentOS-Media.repo and change enabled=1 to 0
+* "There are no enabled repositories in "/etc/yum.repos.d"..."
+  * 重新挂载光驱（上面有）再```yum install php*```
+* ```ps -ef | grep php```
